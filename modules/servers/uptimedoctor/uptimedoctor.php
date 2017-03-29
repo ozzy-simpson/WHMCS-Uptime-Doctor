@@ -62,9 +62,12 @@ function uptimedoctor_CreateAccount(array $params)
     try {
         $pid = $params["configoption1"];
         $addTests = $params["configoptions"]["Uptime Doctor additional tests"];
+        if ($addTests == '') {
+            $addTests = 0;
+        }
         if ($pid == 'option2') {
             $pid = "Basic/10+{$addTests}test";
-            $period = '1';
+            $period = '3';
             $itemid = '&itemid=' . $pid . '&period=' . $period;
         }
         elseif ($pid == 'option3') {
@@ -82,18 +85,17 @@ function uptimedoctor_CreateAccount(array $params)
             $period = '';
             $itemid = '';
         }
-        $verifycode = md5($params["serverusername"] . 'create_account' . $params["username"] . $params["password"] . $params["clientsdetails"]["full name"] . $params["clientsdetails"]["email"] . $pid . $period . $params["clientsdetails"]["countrycode"] . '2010000' . $params["serverpassword"]);
-        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=create_account&client_username={$params["username"]}&password={$params["password"]}&name={$params["clientsdetails"]["fullname"]}&email={$params["clientsdetails"]["email"]}$itemid&country={$params["clientsdetails"]["countrycode"]}&timezone=20&dailyreport=1&weeklyreport=0&monthlyreport=0&servicemailing=0&marketingmailing=0&verifycode=" . $verifycode;        
+        $verifycode = md5($params["serverusername"] . 'create_account' . $params["username"] . $params["password"] . $params["clientsdetails"]["fullname"] . $params["clientsdetails"]["email"] . $pid . $period . $params["clientsdetails"]["countrycode"] . '2010000' . $params["serverpassword"]);
+        $reqUrl = str_replace(' ','%20',"http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=create_account&client_username={$params["username"]}&password={$params["password"]}&name={$params["clientsdetails"]["fullname"]}&email={$params["clientsdetails"]["email"]}" . str_replace('+','%2B',str_replace('/','%2F',$itemid)) . "&country={$params["clientsdetails"]["countrycode"]}&timezone=20&dailyreport=1&weeklyreport=0&monthlyreport=0&servicemailing=0&marketingmailing=0&verifycode=" . $verifycode);           
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $reqUrl);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
         $xml = curl_exec($ch);
         curl_close($ch);
-        return $reqUrl . "<br />" . $xml;
     } catch (Exception $e) {
         logModuleCall(
             'uptimedoctor',
@@ -112,17 +114,16 @@ function uptimedoctor_CreateAccount(array $params)
 function uptimedoctor_SuspendAccount(array $params)
 {
     try {
-        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=suspend_account&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'suspend_account' . $params["username"]);
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $reqUrl);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        $xml = curl_exec($ch);
-        curl_close($ch);
+            $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=suspend_account&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'suspend_account' . $params["username"] . $params["serverpassword"]);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $reqUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
+            $xml = curl_exec($ch);
+            curl_close($ch);
     } catch (Exception $e) {
         logModuleCall(
             'uptimedoctor',
@@ -141,15 +142,15 @@ function uptimedoctor_SuspendAccount(array $params)
 function uptimedoctor_UnsuspendAccount(array $params)
 {
     try {
-        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=reinstate_account&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'reinstate_account' . $params["username"]);
+        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=reinstate_account&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'reinstate_account' . $params["username"] . $params["serverpassword"]);
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $reqUrl);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
         $xml = curl_exec($ch);
         curl_close($ch);
     } catch (Exception $e) {
@@ -170,27 +171,27 @@ function uptimedoctor_UnsuspendAccount(array $params)
 function uptimedoctor_TerminateAccount(array $params)
 {
     try {
-        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=cancel_subscription&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'cancel_subscription' . $params["username"]);
+        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=cancel_subscription&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'cancel_subscription' . $params["username"] . $params["serverpassword"]);
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $reqUrl);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
         $xml = curl_exec($ch);
         curl_close($ch);
         
-        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=close_account&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'close_account' . $params["username"]);
+        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=close_account&client_username={$params["username"]}&verifycode=" . md5($params["serverusername"] . 'close_account' . $params["username"] . $params["serverpassword"]);
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $reqUrl);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
         $xml = curl_exec($ch);
         curl_close($ch);
     } catch (Exception $e) {
@@ -225,15 +226,15 @@ function uptimedoctor_ChangePackage(array $params)
         else {
             $pid = '';
         }
-        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=subscription&client_username={$params["username"]}&itemid=$pid&period=1&verifycode=" . md5($params["serverusername"] . 'subscription' . $params["username"] . $pid . '1');
+        $reqUrl = "http://www.uptimedoctor.com/resellerapi.php?username={$params["serverusername"]}&type=subscription&client_username={$params["username"]}&itemid=$pid&period=1&verifycode=" . md5($params["serverusername"] . 'subscription' . $params["username"] . $pid . '1' . $params["serverpassword"]);
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $reqUrl);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
         $xml = curl_exec($ch);
         curl_close($ch);
     } catch (Exception $e) {
