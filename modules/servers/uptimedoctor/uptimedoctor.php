@@ -255,14 +255,15 @@ function uptimedoctor_ChangePackage(array $params)
 function uptimedoctor_ClientAreaCustomButtonArray()
 {
     return array(
-        "Login to Monitoring Panel" => "ServiceSingleSignOn",
+        "Login to Monitoring Panel" => "ClientAreaServiceSingleSignOn",
     );
 }
 
-function uptimedoctor_ServiceSingleSignOn(array $params)
+function uptimedoctor_ClientAreaServiceSingleSignOn(array $params)
 {
     try {
         $redirectUrl = "http://{$params["configoption2"]}/login.php?login_username={$params["username"]}&t1=" . time() . "&t2=" . md5($params["username"] . time() . $params["serverpassword"]);
+        
         header('Location: ' . $redirectUrl);
 
         return array(
@@ -284,11 +285,36 @@ function uptimedoctor_ServiceSingleSignOn(array $params)
         );
     }
 }
-function provisioningmodule_AdminSingleSignOn(array $params)
+
+function uptimedoctor_ServiceSingleSignOn(array $params)
 {
     try {
         $redirectUrl = "http://{$params["configoption2"]}/login.php?login_username={$params["username"]}&t1=" . time() . "&t2=" . md5($params["username"] . time() . $params["serverpassword"]);
-        header('Location: ' . $redirectUrl);
+        
+        return array(
+            'success' => true,
+            'redirectTo' => $redirectUrl,
+        );
+    } catch (Exception $e) {
+        logModuleCall(
+            'uptimedoctor',
+            __FUNCTION__,
+            $params,
+            $e->getMessage(),
+            $e->getTraceAsString()
+        );
+
+        return array(
+            'success' => false,
+            'errorMsg' => $e->getMessage(),
+        );
+    }
+}
+function uptimedoctor_AdminSingleSignOn(array $params)
+{
+    try {
+        $redirectUrl = "http://{$params["configoption2"]}/login.php?test=2&login_username={$params["username"]}&t1=" . time() . "&t2=" . md5($params["username"] . time() . $params["serverpassword"]);
+
         return array(
             'success' => true,
             'redirectTo' => $redirectUrl,
@@ -318,7 +344,7 @@ function uptimedoctor_ClientArea(array $params)
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
-            'provisioningmodule',
+            'uptimedoctor',
             __FUNCTION__,
             $params,
             $e->getMessage(),
